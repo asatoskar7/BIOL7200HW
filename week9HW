@@ -1,0 +1,38 @@
+# prompt: Did the COVID-19 pandemic, which began in 2020, impact influenza
+# hospitalizations 
+
+import sys
+import matplotlib.pyplot as plt 
+
+
+f = sys.argv[1]
+f = open(f).readlines()[5:-1]
+
+
+cleaned_data = []
+for i in f: 
+    i = i.strip('\n').split(",")
+    cleaned_data.append(i)
+
+anomaly_list = []
+for l in cleaned_data: 
+    year = int(l[0])
+    temp = float(l[1])
+    anomaly_list.append((year,temp))
+
+x_axis_year = []
+y_axis_tempchange = []
+
+for tup in anomaly_list: 
+    x_axis_year.append(tup[0])
+    y_axis_tempchange.append(tup[1])
+
+fig, ax = plt.subplots()
+ax.plot(x_axis_year, y_axis_tempchange)
+ax.set_xlabel("Year-Month (YYYYMM)")
+ax.set_ylabel("Temperature Change")
+
+ax.axhline(0, color = "yellow", label = "Average Temperature") 
+ax.legend()
+plt.show()
+plt.savefig("ex9_plot.png")
