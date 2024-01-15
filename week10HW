@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+import subprocess
+
+def step_one(primer_file, assembly_file): 
+    blastn = ['blastn', 
+              '-query', primer_file, 
+              '-subject', assembly_file,
+              '-task', 'blastn-short',
+              '-outfmt', '6 std qlen',  
+              '-out', 'blastnout.txt']
+    blastn_result = subprocess.run(blastn) 
+    
+    blastfile = 'blastnout.txt'
+    good_hits = []
+    sorted_good_hits = []
+    with open(blastfile) as f:
+        for hit in f: 
+            _, _, pcnt, _, _,_,_,_,_,_,_,_,_ = hit.split()
+            pcnt = float(pcnt)
+          
+            if pcnt >= 80.000 and pcnt != 100.000 : 
+                good_hits.append(hit)
+       
+        for val in good_hits: 
+            val = val.strip('\n')  
+            val = val.split('\t')
+            sorted_good_hits.append(val)
+   
+        sorted_good_hits.sort(key = lambda x: int(x[8]))
+       
+    return sorted_good_hits           
+    
+
+def step_two(sorted_hits, max_amplicon_size): 
+    pcr_amplicon = []
+    
+    for i in range(0, len(sorted_hits)-1):
+        
+        hit1 = sorted_hits [i]
+        hit2 = sorted_hits[i+1]
+        id1, _, _, _, _,_,_,_,fp1,tp1,_,_,_ = hit1
+        id2, _, _, _, _,_,_,_,fp2,tp2,_,_,_ = hit2
+        fp1 = int(fp1)
+        fp2 = int(fp2)
+        tp1 = int(tp1)
+        tp2 = int(tp2)
+        amplicon_size = tp2 - tp1
+        
+        
+        if amplicon_size <= max_amplicon_size: 
+            if fp1 < tp1 and fp2 > tp2: 
+                pcr_amplicon.append((hit1,hit2))
+            
+            elif fp1 > tp1 and fp2 < tp2: 
+                pcr_amplicon.append((hit1,hit2))
+                
+        
+    sorted_hits.sort(key = lambda x: int(x[1][8]))
+    return pcr_amplicon
+           
+	
+      
+def step_three(hit_pairs, assembly_file): 
+    with open('vc_bedfile.bed', 'w') as f: 
+        for hit_pair in hit_pairs:
+            hit1, hit2 = hit_pair 
+            _, col1, _, _, _, _, _, _, sstart1, send1, _, _, _ = hit1
+            _, _, _, _, _, _, _, _, sstart2, send2, _ , _, _ = hit2
+            send1 = int(send1)
+            send2 = int(send2)
+            col1 = str(col1)
+            f.write(col1 + "\t" + str(send1) + "\t" + str(send2-1) + "\n")
+    f.close()
+    
+    seqtk = ['seqtk', 'subseq',
+             assembly_file, 
+             'vc_bedfile.bed', '>', 'out.fa' ]
+
+    subprocess.run(seqtk)
+        
