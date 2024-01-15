@@ -1,0 +1,19 @@
+import sys
+
+f = open(sys.argv[-1], "r")
+lines = f.readlines()
+
+seq1 = lines[1]
+seq2 = lines[3]
+
+match_seq = "" 
+for i in range(0,len(seq1)): 
+    if seq1[i] == seq2[i]: 
+        match_seq += "|"
+    elif seq1[i] != seq2[i]:
+        match_seq += " "
+
+
+print(seq1)
+print(match_seq)
+print(seq2)
