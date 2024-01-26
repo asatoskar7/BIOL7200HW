@@ -3,6 +3,7 @@
 import subprocess
 
 def step_one(primer_file, assembly_file): 
+##runs blast on the assembly file 
     blastn = ['blastn', 
               '-query', primer_file, 
               '-subject', assembly_file,
@@ -12,6 +13,7 @@ def step_one(primer_file, assembly_file):
     blastn_result = subprocess.run(blastn) 
     
     blastfile = 'blastnout.txt'
+##determines the amount of hits that have a percent identity of 80% or more but not 100 
     good_hits = []
     sorted_good_hits = []
     with open(blastfile) as f:
